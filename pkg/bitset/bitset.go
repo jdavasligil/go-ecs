@@ -5,11 +5,12 @@ type Bitset interface {
 	SetBit(i int)
 	ClearBit(i int)
 	Len() int
+	Reset()
 }
 
 type BitsetUint64 []uint64
 
-func NewUint8(n int) BitsetUint64 {
+func NewUint64(n int) BitsetUint64 {
 	return make(BitsetUint64, (n+63)/64)
 }
 
@@ -27,4 +28,10 @@ func (b BitsetUint64) ClearBit(i int) {
 
 func (b BitsetUint64) Len() int {
 	return 64 * len(b)
+}
+
+func (b BitsetUint64) Reset() {
+	for i := 0; i < len(b); i++ {
+		b[i] = 0
+	}
 }

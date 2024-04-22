@@ -1,36 +1,14 @@
-# Project Title
+<!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
 
-Simple overview of use/purpose.
+# Project Title
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-informational?style=flat-square)](COPYRIGHT.md)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+
+Go ECS is a simple Entity Component System framework.
 
 ## Description
 
 An in-depth paragraph about your project and overview of use.
-
-## Getting Started
-
-### Dependencies
-
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-
-### Installing
-
-* How/where to download your program
-* Any modifications needed to be made to files/folders
-
-### Executing program
-
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
-
-## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
 
 ## Authors
 
@@ -39,19 +17,28 @@ Jaedin Davasligil
 
 ## Version History
 
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
+* In-Dev
+
+## Contributing
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as below, without any additional terms or conditions.
 
 ## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+&copy; \<2024\> \<Jaedin Davasligil\>.
+
+This project is licensed under either of
+
+- [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) ([`LICENSE-APACHE`](LICENSE-APACHE))
+- [MIT license](https://opensource.org/licenses/MIT) ([`LICENSE-MIT`](LICENSE-MIT))
+
+The [SPDX](https://spdx.dev) license identifier for this project is `MIT OR Apache-2.0`.
 
 ## Acknowledgments
 
 * [Austin Morlan](https://austinmorlan.com/posts/entity_component_system/#what-is-an-ecs)
+* [Dakom](https://gist.github.com/dakom/82551fff5d2b843cbe1601bbaff2acbf)
+* [Michele Caini](https://skypjack.github.io/2019-02-14-ecs-baf-part-1/)
 * [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [pitchfork](https://api.csswg.org/bikeshed/?force=1&url=https://raw.githubusercontent.com/vector-of-bool/pitchfork/develop/data/spec.bs)
 * [project-layout](https://github.com/golang-standards/project-layout)

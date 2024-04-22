@@ -56,9 +56,9 @@ func (rb *RingBuffer[T]) Len() int {
 }
 
 func (rb *RingBuffer[T]) IsEmpty() bool {
-    return rb.length == 0
+	return rb.length == 0
 }
 
 func (rb *RingBuffer[T]) IsFull() bool {
-    return rb.length == rb.capacity
+	return rb.length == rb.capacity
 }

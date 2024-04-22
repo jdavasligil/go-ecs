@@ -1,16 +1,12 @@
 package ecs
 
-import "github.com/jdavasligil/go-ecs/pkg/bitset"
+// https://gist.github.com/dakom/82551fff5d2b843cbe1601bbaff2acbf
 
-type Archetype uint32
-
-type ComponentType uint8
-
-type Signature = bitset.BitsetUint64
+type ComponentID uint8
 
 const (
-	MAX_ENTITIES   Entity        = 1e6
-	MAX_COMPONENTS ComponentType = 255
+	MAX_ENTITIES   Entity      = 16777216
+	MAX_COMPONENTS ComponentID = 255
 )
 
 type World struct {
