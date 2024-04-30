@@ -5,7 +5,7 @@ package ecs
 type ComponentID uint8
 
 const (
-	MAX_ENTITIES   Entity      = 16777216
+	MAX_ENTITIES   Entity      = 4096 //16777216
 	MAX_COMPONENTS ComponentID = 255
 )
 

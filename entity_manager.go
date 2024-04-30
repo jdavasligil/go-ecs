@@ -22,7 +22,7 @@ type EntityManager struct {
 
 func NewEntityManager() *EntityManager {
 	return &EntityManager{
-		pool:  queue.NewRingBuffer[Entity](1024),
+		pool: queue.NewRingBuffer[Entity](1024),
 	}
 }
 
