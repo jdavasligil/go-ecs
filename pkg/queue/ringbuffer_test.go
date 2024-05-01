@@ -1,7 +1,6 @@
 package queue_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/jdavasligil/go-ecs/pkg/queue"
@@ -43,6 +42,4 @@ func TestRingBuffer(t *testing.T) {
 	for rb.Len() > 0 {
 		rb.Pop()
 	}
-
-	log.Printf("Noop value: %v", rb.Pop())
 }

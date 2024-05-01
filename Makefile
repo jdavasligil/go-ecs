@@ -13,6 +13,10 @@ tidy:
 test:
 	@go test -v ./...
 
+.PHONY: bench
+bench:
+	@go test -v ./... -bench=. -run=^$ -benchmem
+
 .PHONY: clean
 clean:
 	@go clean && rm -rf ./bin/*
