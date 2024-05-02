@@ -11,46 +11,50 @@ import (
 // The EntityManager is responsible for distributing Entity IDs.
 type EntityManager struct {
 	// Queue of discarded entity IDs for recycling.
-	pool queue.Queue[Entity]
+	bin queue.Queue[Entity]
 
 	// Total living entities used to enforce a limit on max entities.
 	size uint32
 
-	// ID for the next entity to be created if the recycle pool is empty.
-	next Entity
+	// ID for the next entity to be created if the recycle bin is empty.
+	next uint32
 }
 
 func NewEntityManager() *EntityManager {
 	return &EntityManager{
-		pool: queue.NewRingBuffer[Entity](1024),
+		bin: queue.NewRingBuffer[Entity](1024),
 	}
 }
 
 func (em *EntityManager) CreateEntity() Entity {
-	if em.size == uint32(MAX_ENTITIES) {
-		log.Printf("ECS: Failed to create entity - manager is full.")
+	if em.size == MAX_ENTITIES {
+		log.Printf("EntityManager: Failed to create entity - manager is full.")
 		return 0
 	}
 
-	var id Entity
+	var entity Entity
 
-	if em.pool.IsEmpty() {
-		id = em.next
+	if em.bin.IsEmpty() {
+		entity = NewEntity(em.next)
 		em.next += 1
 	} else {
-		id = em.pool.Pop()
+		entity = em.bin.Pop()
 	}
 
-	return id
+	return entity
 }
 
+// DestroyEntity only marks the entity as deleted and pushes it to the recycle
+// bin. The component data must also be deleted by removing that entity from
+// each associated component pool handled by the component manager.
 func (em *EntityManager) DestroyEntity(entity Entity) bool {
 	if em.size == 0 {
-		log.Printf("ECS: Failed to destroy entity - manager is full.")
+		log.Printf("EntityManager: Failed to destroy entity - manager is empty.")
 		return false
 	}
 
-	em.pool.Push(entity)
+	entity.Next()
+	em.bin.Push(entity)
 	em.size -= 1
 
 	return true

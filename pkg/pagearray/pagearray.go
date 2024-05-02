@@ -1,16 +1,18 @@
 package pagearray
 
 import (
+	"sync"
 	"unsafe"
 )
 
 // PageArray is a space saving data structure which splits an array into pages.
 // Pages initialize to nil allowing for minimally sized gaps between pages.
 type PageArray struct {
-	// pages is a slice of int slices
+	mu sync.Mutex
+
 	pages [][]int
 
-	// Logarithmic size of page (power of 2)
+	// Logarithmic page size (power of 2).
 	pow2 uint32
 }
 
@@ -25,6 +27,8 @@ func NewPageArray(pow2 uint32) PageArray {
 // is non-negative. Set will grow dynamically filling the gaps with nil pages.
 // The memory overhead of nil pages is small but can be cleaned up with Sweep.
 func (p *PageArray) Set(idx int, val int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	pageIdx := idx >> p.pow2
 	offset := idx & ((1 << p.pow2) - 1)
 	for len(p.pages) <= pageIdx {
@@ -43,6 +47,8 @@ func (p *PageArray) Set(idx int, val int) {
 // Clear by itself has no effect on allocated memory. If you want to check if
 // a page is empty and deallocate the unused memory, use SweepAndClear.
 func (p *PageArray) Clear(idx int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	pageIdx := idx >> p.pow2
 	offset := idx & ((1 << p.pow2) - 1)
 	if len(p.pages) <= pageIdx || p.pages[pageIdx] == nil {
@@ -56,6 +62,8 @@ func (p *PageArray) Clear(idx int) {
 // trims them off at the end. This is a fairly expensive call and should only
 // be run when necessary to clear up memory.
 func (p *PageArray) Sweep() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	nilOffset := 0
 	for pageIdx, page := range p.pages {
 		nilOffset++
@@ -79,6 +87,8 @@ func (p *PageArray) Sweep() {
 // SweepAndClear will deallocate the whole page. The additional overhead of
 // checking for empty is a quick O(N) search where N is the page size.
 func (p *PageArray) SweepAndClear(idx int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	pageIdx := idx >> p.pow2
 	offset := idx & ((1 << p.pow2) - 1)
 	if len(p.pages) <= pageIdx || p.pages[pageIdx] == nil {
@@ -97,12 +107,16 @@ func (p *PageArray) SweepAndClear(idx int) {
 // Reset performs a hard reset by throwing away all allocated memory for
 // garbage collection. May negatively affect garbage collection performance.
 func (p *PageArray) Reset() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.pages = make([][]int, 0)
 }
 
 // At gets the current value at the given index, otherwise it returns -1 to
 // indicate empty.
 func (p *PageArray) At(idx int) int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	pageIdx := idx >> p.pow2
 	offset := idx & ((1 << p.pow2) - 1)
 	// Should we do bounds checking here, or leave it up to the caller?
@@ -115,6 +129,8 @@ func (p *PageArray) At(idx int) int {
 
 // MemUsage returns an estimate for the current memory being used in bytes.
 func (p *PageArray) MemUsage() uintptr {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	size := unsafe.Sizeof(*p) + unsafe.Sizeof(p.pages) + unsafe.Sizeof(p.pow2)
 	var myInt int = 0
 	for i := 0; i < len(p.pages); i++ {

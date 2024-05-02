@@ -1,6 +1,8 @@
 package ecs
 
 import (
+	"sync"
+
 	"github.com/jdavasligil/go-ecs/pkg/pagearray"
 )
 
@@ -12,10 +14,19 @@ import (
 //	Add    - O(1)
 //	Remove - O(1)
 //	Query  - O(1)
+//
+// Thread Safety: PageArray is thread safe, but Pool is not. To protect pool
+// from concurrent access, Pool may be locked and unlocked directly. E.g.,
+//
+// pool := NewPool[Component]()
+// pool.Lock()
+// pool.Add(entity, component)
+// pool.Unlock()
 type Pool[T any] struct {
+	sync.Mutex
+
 	// entityIndices is a sparse array that holds the indices into EntityList.
 	// The array is indexed by the entity id itself. A value of -1 means empty.
-	// TODO: Pagination for memory conservation.
 	entityIndices pagearray.PageArray
 
 	// entityList is a packed array that contains the entities. The index
@@ -29,8 +40,8 @@ type Pool[T any] struct {
 }
 
 // NewPool constructs a component pool for a particular component type.
-func NewPool[T any]() Pool[T] {
-	p := Pool[T]{
+func NewPool[T any]() *Pool[T] {
+	p := &Pool[T]{
 		entityIndices: pagearray.NewPageArray(10), // Page size 1024
 		entityList:    make([]Entity, 0, 256),
 		componentList: make([]T, 0, 256),
