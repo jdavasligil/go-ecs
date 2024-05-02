@@ -6,7 +6,7 @@ import (
 	"github.com/jdavasligil/go-ecs/pkg/pagearray"
 )
 
-// Pool is a sparse set used for each registered Component type which maps
+// ComponentStore is a sparse set used for each registered Component type which maps
 // entities to their components.
 //
 // Time Complexity:
@@ -15,14 +15,14 @@ import (
 //	Remove - O(1)
 //	Query  - O(1)
 //
-// Thread Safety: PageArray is thread safe, but Pool is not. To protect pool
-// from concurrent access, Pool may be locked and unlocked directly. E.g.,
+// Thread Safety: PageArray is thread safe, but ComponentStore is not. To protect store
+// from concurrent access, ComponentStore may be locked and unlocked directly. E.g.,
 //
-// pool := NewPool[Component]()
-// pool.Lock()
-// pool.Add(entity, component)
-// pool.Unlock()
-type Pool[T any] struct {
+// store := NewComponentStore[Component]()
+// store.Lock()
+// store.Add(entity, component)
+// store.Unlock()
+type ComponentStore[T any] struct {
 	sync.Mutex
 
 	// entityIndices is a sparse array that holds the indices into EntityList.
@@ -39,9 +39,9 @@ type Pool[T any] struct {
 	componentList []T
 }
 
-// NewPool constructs a component pool for a particular component type.
-func NewPool[T any]() *Pool[T] {
-	p := &Pool[T]{
+// NewComponentStore constructs a component store for a particular component type.
+func NewComponentStore[T any]() *ComponentStore[T] {
+	p := &ComponentStore[T]{
 		entityIndices: pagearray.NewPageArray(10), // Page size 1024
 		entityList:    make([]Entity, 0, 256),
 		componentList: make([]T, 0, 256),
@@ -49,12 +49,12 @@ func NewPool[T any]() *Pool[T] {
 	return p
 }
 
-func (p *Pool[T]) IsRegistered(e Entity) bool {
+func (p *ComponentStore[T]) IsRegistered(e Entity) bool {
 	return p.entityIndices.At(int(e.ID())) >= 0
 }
 
 // Add registers component of type T to the entity. Returns true if successful.
-func (p *Pool[T]) Add(e Entity, c T) bool {
+func (p *ComponentStore[T]) Add(e Entity, c T) bool {
 	if p.IsRegistered(e) {
 		return false
 	}
@@ -64,9 +64,9 @@ func (p *Pool[T]) Add(e Entity, c T) bool {
 	return true
 }
 
-// Remove unregisters the entity from the component pool and returns the
+// Remove unregisters the entity from the component store and returns the
 // removed entity.
-func (p *Pool[T]) Remove(e Entity) Entity {
+func (p *ComponentStore[T]) Remove(e Entity) Entity {
 	if !p.IsRegistered(e) {
 		return 0
 	}
@@ -88,7 +88,7 @@ func (p *Pool[T]) Remove(e Entity) Entity {
 }
 
 // Retrieves the component data associated with a specific entity.
-func (p *Pool[T]) GetComponent(e Entity) (T, bool) {
+func (p *ComponentStore[T]) GetComponent(e Entity) (T, bool) {
 	if !p.IsRegistered(e) {
 		var noop T
 		return noop, false
@@ -97,22 +97,22 @@ func (p *Pool[T]) GetComponent(e Entity) (T, bool) {
 }
 
 // Retrieves the slice of all component data independent of the entities.
-func (p *Pool[T]) Components() []T {
+func (p *ComponentStore[T]) Components() []T {
 	return p.componentList
 }
 
 // Retrieves the list of all entities with this component registered.
-func (p *Pool[T]) Entities() []Entity {
+func (p *ComponentStore[T]) Entities() []Entity {
 	return p.entityList
 }
 
-func (p *Pool[T]) Size() int {
+func (p *ComponentStore[T]) Size() int {
 	return len(p.entityList)
 }
 
 // Reset performs a hard reset by throwing away all allocated memory for
 // garbage collection. May negatively affect garbage collection performance.
-func (p *Pool[T]) Reset() {
+func (p *ComponentStore[T]) Reset() {
 	p.entityIndices.Reset()
 	p.entityList = make([]Entity, 0, 256)
 	p.componentList = make([]T, 0, 256)

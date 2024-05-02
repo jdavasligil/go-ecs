@@ -44,12 +44,12 @@ func (em *EntityManager) CreateEntity() Entity {
 	return entity
 }
 
-// DestroyEntity only marks the entity as deleted and pushes it to the recycle
+// RecycleEntity only marks the entity as deleted and pushes it to the recycle
 // bin. The component data must also be deleted by removing that entity from
 // each associated component pool handled by the component manager.
-func (em *EntityManager) DestroyEntity(entity Entity) bool {
+func (em *EntityManager) RecycleEntity(entity Entity) bool {
 	if em.size == 0 {
-		log.Printf("EntityManager: Failed to destroy entity - manager is empty.")
+		log.Printf("EntityManager: Failed to recycle entity - manager is empty.")
 		return false
 	}
 

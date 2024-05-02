@@ -10,4 +10,12 @@ const (
 )
 
 type World struct {
+	entities   EntityManager
+	components []any
+}
+
+// TODO: How to Query data (entity/components) using Generics?
+
+func Register[T any](e Entity, w *World) {
+	w.components = append(w.components, NewComponentStore[T]())
 }
