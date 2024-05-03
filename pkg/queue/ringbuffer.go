@@ -1,9 +1,6 @@
 package queue
 
-import "sync"
-
 type RingBuffer[T any] struct {
-	mu       sync.Mutex
 	back     int
 	buf      []T
 	length   int
@@ -18,8 +15,6 @@ func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
 }
 
 func (rb *RingBuffer[T]) Push(t T) {
-	rb.mu.Lock()
-	defer rb.mu.Unlock()
 	rb.buf[rb.back] = t
 	rb.back = (rb.back + 1) % rb.capacity
 	if rb.length < rb.capacity {
@@ -28,8 +23,6 @@ func (rb *RingBuffer[T]) Push(t T) {
 }
 
 func (rb *RingBuffer[T]) Pop() T {
-	rb.mu.Lock()
-	defer rb.mu.Unlock()
 	if rb.length == 0 {
 		var noop T
 		return noop
@@ -41,8 +34,6 @@ func (rb *RingBuffer[T]) Pop() T {
 }
 
 func (rb *RingBuffer[T]) Peek() T {
-	rb.mu.Lock()
-	defer rb.mu.Unlock()
 	if rb.length == 0 {
 		var noop T
 		return noop

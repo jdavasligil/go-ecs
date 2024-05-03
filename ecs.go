@@ -25,16 +25,16 @@ func (w *World) NewEntity() Entity {
 }
 
 func (w *World) EntityCount() int {
-    return int(w.entities.size)
+	return int(w.entities.size)
 }
 
 func (w *World) ComponentCount() int {
-    count := 0
-    for _, c := range w.components {
-        if c != nil {
-            count++
-        }
-    }
+	count := 0
+	for _, c := range w.components {
+		if c != nil {
+			count++
+		}
+	}
 	return count
 }
 
@@ -84,7 +84,7 @@ func QueryAll[T Component](w *World) ([]Entity, []T) {
 	if !ok {
 		return nil, nil
 	}
-    return store.entityList, store.componentList
+	return store.entityList, store.componentList
 }
 
 func Query2[T Component, V Component](w *World) ([]Entity, []T, []V) {
@@ -93,39 +93,39 @@ func Query2[T Component, V Component](w *World) ([]Entity, []T, []V) {
 	storeT, okT := w.components[noopT.ID()].(*ComponentStore[T])
 	storeV, okV := w.components[noopV.ID()].(*ComponentStore[V])
 	if !(okT || okV) {
-        if okT {
-            return storeT.entityList, storeT.componentList, nil
-        } else if okV {
-            return storeV.entityList, nil, storeV.componentList
-        } else {
-            return nil, nil, nil
-        }
+		if okT {
+			return storeT.entityList, storeT.componentList, nil
+		} else if okV {
+			return storeV.entityList, nil, storeV.componentList
+		} else {
+			return nil, nil, nil
+		}
 	}
-    if len(storeT.entityList) < len(storeV.entityList) {
-        es := make([]Entity, 0)
-        ts := make([]T, 0)
-        vs := make([]V, 0)
-        for idxT, e := range storeT.entityList {
-            idxV := storeV.entityIndices.At(int(e.ID()))
-            if  idxV >= 0 {
-                es = append(es, e)
-                ts = append(ts, storeT.componentList[idxT])
-                vs = append(vs, storeV.componentList[idxV])
-            }
-        }
-        return es, ts, vs
-    } else {
-        es := make([]Entity, 0)
-        ts := make([]T, 0)
-        vs := make([]V, 0)
-        for idxV, e := range storeV.entityList {
-            idxT := storeT.entityIndices.At(int(e.ID()))
-            if  idxT >= 0 {
-                es = append(es, e)
-                ts = append(ts, storeT.componentList[idxT])
-                vs = append(vs, storeV.componentList[idxV])
-            }
-        }
-        return es, ts, vs
-    }
+	if len(storeT.entityList) < len(storeV.entityList) {
+		es := make([]Entity, 0)
+		ts := make([]T, 0)
+		vs := make([]V, 0)
+		for idxT, e := range storeT.entityList {
+			idxV := storeV.entityIndices.At(int(e.ID()))
+			if idxV >= 0 {
+				es = append(es, e)
+				ts = append(ts, storeT.componentList[idxT])
+				vs = append(vs, storeV.componentList[idxV])
+			}
+		}
+		return es, ts, vs
+	} else {
+		es := make([]Entity, 0)
+		ts := make([]T, 0)
+		vs := make([]V, 0)
+		for idxV, e := range storeV.entityList {
+			idxT := storeT.entityIndices.At(int(e.ID()))
+			if idxT >= 0 {
+				es = append(es, e)
+				ts = append(ts, storeT.componentList[idxT])
+				vs = append(vs, storeV.componentList[idxV])
+			}
+		}
+		return es, ts, vs
+	}
 }
