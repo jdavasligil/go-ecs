@@ -22,7 +22,7 @@ import (
 // store.Lock()
 // store.Add(entity, component)
 // store.Unlock()
-type ComponentStore[T any] struct {
+type ComponentStore[T Component] struct {
 	sync.Mutex
 
 	// entityIndices is a sparse array that holds the indices into EntityList.
@@ -40,11 +40,11 @@ type ComponentStore[T any] struct {
 }
 
 // NewComponentStore constructs a component store for a particular component type.
-func NewComponentStore[T any]() *ComponentStore[T] {
+func NewComponentStore[T Component]() *ComponentStore[T] {
 	p := &ComponentStore[T]{
 		entityIndices: pagearray.NewPageArray(10), // Page size 1024
-		entityList:    make([]Entity, 0, 256),
-		componentList: make([]T, 0, 256),
+		entityList:    make([]Entity, 0),
+		componentList: make([]T, 0),
 	}
 	return p
 }
@@ -96,12 +96,21 @@ func (p *ComponentStore[T]) GetComponent(e Entity) (T, bool) {
 	return p.componentList[p.entityIndices.At(int(e.ID()))], true
 }
 
+// Retrieves a mutable reference to the  component data associated with a
+// specific entity. Only a single caller may claim ownership at a time.
+func (p *ComponentStore[T]) GetMutComponent(e Entity) (*T, bool) {
+	if !p.IsRegistered(e) {
+		return nil, false
+	}
+	return &p.componentList[p.entityIndices.At(int(e.ID()))], true
+}
+
 // Retrieves the slice of all component data independent of the entities.
 func (p *ComponentStore[T]) Components() []T {
 	return p.componentList
 }
 
-// Retrieves the list of all entities with this component registered.
+// Retrieves the slice of all entities with this component registered.
 func (p *ComponentStore[T]) Entities() []Entity {
 	return p.entityList
 }

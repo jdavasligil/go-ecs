@@ -1,6 +1,8 @@
 package ecs
 
-// Component represents any pure data type that is named.
+type ComponentID uint8
+
+// Component represents any pure data type and is given an ID.
 type Component interface {
-	TypeName() string
+	ID() ComponentID
 }

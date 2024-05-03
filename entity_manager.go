@@ -20,9 +20,11 @@ type EntityManager struct {
 	next uint32
 }
 
-func NewEntityManager() *EntityManager {
-	return &EntityManager{
-		bin: queue.NewRingBuffer[Entity](1024),
+func NewEntityManager() EntityManager {
+	return EntityManager{
+		bin:  queue.NewRingBuffer[Entity](1024),
+		size: 0,
+		next: 1,
 	}
 }
 
