@@ -66,42 +66,42 @@ func TestPageArraySweep(t *testing.T) {
 
 func BenchmarkPageArray(b *testing.B) {
 	b.Run("PageArraySweepAndClear", func(b *testing.B) {
-		pArr := pagearray.NewPageArray(12) // Page size: 2^12 = 4096 ints
+		pArr := pagearray.NewPageArray(10) // Page size: 2^ = 1024 ints
 		for i := 0; i < b.N; i++ {
 			pArr.Set(1, 1)
-			pArr.Set(4096, 2)
+			pArr.Set(1024, 2)
 			pArr.Set(2, 3)
-			pArr.Set(4097, 4)
-			pArr.Clear(1)
-			pArr.Clear(4096)
+			pArr.Set(1025, 4)
+			pArr.SweepAndClear(1)
+			pArr.SweepAndClear(1024)
 			pArr.SweepAndClear(2)
-			pArr.SweepAndClear(4097)
+			pArr.SweepAndClear(1025)
 		}
 	})
 	b.Run("PageArrayClear", func(b *testing.B) {
-		pArr := pagearray.NewPageArray(12) // Page size: 2^12 = 4096 ints
+		pArr := pagearray.NewPageArray(10) // Page size: 2^ = 1024 ints
 		for i := 0; i < b.N; i++ {
 			pArr.Set(1, 1)
-			pArr.Set(4096, 2)
+			pArr.Set(1024, 2)
 			pArr.Set(2, 3)
-			pArr.Set(4097, 4)
+			pArr.Set(1025, 4)
 			pArr.Clear(1)
-			pArr.Clear(4096)
+			pArr.Clear(1024)
 			pArr.Clear(2)
-			pArr.Clear(4097)
+			pArr.Clear(1025)
 		}
 	})
 	b.Run("Array", func(b *testing.B) {
-		sArr := make([]int, 4096*2)
+		sArr := make([]int, 1024*2)
 		for i := 0; i < b.N; i++ {
 			sArr[1] = 1
-			sArr[4096] = 2
+			sArr[1024] = 2
 			sArr[2] = 3
-			sArr[4097] = 4
+			sArr[1025] = 4
 			sArr[1] = -1
-			sArr[4096] = -1
+			sArr[1024] = -1
 			sArr[2] = -1
-			sArr[4097] = -1
+			sArr[1025] = -1
 		}
 	})
 }

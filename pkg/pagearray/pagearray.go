@@ -61,12 +61,14 @@ func (p *PageArray) Sweep() {
 		if page != nil {
 			pageEmpty := true
 			for i := 0; i < len(page); i++ {
-				pageEmpty = pageEmpty && (page[i] == -1)
+				if page[i] >= 0 {
+					pageEmpty = false
+					nilOffset = 0
+					break
+				}
 			}
 			if pageEmpty {
 				p.pages[pageIdx] = nil
-			} else {
-				nilOffset = 0
 			}
 		}
 	}
@@ -84,13 +86,12 @@ func (p *PageArray) SweepAndClear(idx int) {
 		return
 	}
 	p.pages[pageIdx][offset] = -1
-	pageEmpty := true
 	for i := 0; i < len(p.pages[pageIdx]); i++ {
-		pageEmpty = pageEmpty && (p.pages[pageIdx][i] == -1)
+		if p.pages[pageIdx][i] >= 0 {
+			return
+		}
 	}
-	if pageEmpty {
-		p.pages[pageIdx] = nil
-	}
+	p.pages[pageIdx] = nil
 }
 
 // Reset performs a hard reset by throwing away all allocated memory for

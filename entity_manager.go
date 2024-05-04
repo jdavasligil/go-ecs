@@ -43,6 +43,8 @@ func (em *EntityManager) CreateEntity() Entity {
 		entity = em.bin.Pop()
 	}
 
+	em.size++
+
 	return entity
 }
 

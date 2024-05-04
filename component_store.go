@@ -15,13 +15,14 @@ import (
 //	Remove - O(1)
 //	Query  - O(1)
 //
-// Thread Safety: PageArray is thread safe, but ComponentStore is not. To protect store
-// from concurrent access, ComponentStore may be locked and unlocked directly. E.g.,
+// Thread Safety: To protect store from concurrent access, ComponentStore may
 //
-// store := NewComponentStore[Component]()
-// store.Lock()
-// store.Add(entity, component)
-// store.Unlock()
+//	           be locked and unlocked directly. E.g.,
+//
+//	store := NewComponentStore[Component]()
+//	store.Lock()
+//	store.Add(entity, component)
+//	store.Unlock()
 type ComponentStore[T Component] struct {
 	sync.Mutex
 
