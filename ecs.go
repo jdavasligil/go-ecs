@@ -12,14 +12,14 @@ const (
 // World contains all entities and their components. ECS provides an API for
 // creating systems which can query and act upon the packed component data.
 type World struct {
-	entities       EntityManager
+	entities       entityManager
 	components     []any
 	ComponentCount int
 }
 
 func NewWorld() World {
 	return World{
-		entities:   NewEntityManager(),
+		entities:   newEntityManager(),
 		components: make([]any, MAX_COMPONENTS),
 	}
 }
@@ -54,14 +54,14 @@ func Initialize[T Component](w *World) bool {
 // Register is used to register component data with an entity. This function
 // is used to both initialize and add component data to an entity.
 func Register[T Component](w *World, e Entity, c T) bool {
-	var store *ComponentStore[T]
+	var store *componentStore[T]
 	if w.components[c.ID()] == nil {
 		store = NewComponentStore[T]()
 		w.components[c.ID()] = store
 		w.ComponentCount++
 	} else {
 		var ok bool
-		store, ok = w.components[c.ID()].(*ComponentStore[T])
+		store, ok = w.components[c.ID()].(*componentStore[T])
 		if !ok {
 			return false
 		}
@@ -71,7 +71,7 @@ func Register[T Component](w *World, e Entity, c T) bool {
 
 // Add will add a component to an entity.
 func Add[T Component](w *World, e Entity, c T) bool {
-	store, ok := w.components[c.ID()].(*ComponentStore[T])
+	store, ok := w.components[c.ID()].(*componentStore[T])
 	if !ok {
 		return false
 	}
@@ -82,7 +82,7 @@ func Add[T Component](w *World, e Entity, c T) bool {
 // entity or the null entity upon failure.
 func Remove[T Component](w *World, e Entity) Entity {
 	var noop T
-	store, ok := w.components[noop.ID()].(*ComponentStore[T])
+	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
 		return 0
 	}
@@ -92,7 +92,7 @@ func Remove[T Component](w *World, e Entity) Entity {
 // Query returns a copy of the data queried for a single entity.
 func Query[T Component](w *World, e Entity) (T, bool) {
 	var noop T
-	store, ok := w.components[noop.ID()].(*ComponentStore[T])
+	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
 		return noop, ok
 	}
@@ -103,7 +103,7 @@ func Query[T Component](w *World, e Entity) (T, bool) {
 // a particular entity. Only a single caller may claim ownership at a time.
 func MutQuery[T Component](w *World, e Entity) (*T, bool) {
 	var noop T
-	store, ok := w.components[noop.ID()].(*ComponentStore[T])
+	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
 		return nil, ok
 	}
@@ -115,7 +115,7 @@ func MutQuery[T Component](w *World, e Entity) (*T, bool) {
 // single caller may claim mutable ownership at a time. Slices are possibly nil.
 func QueryAll[T Component](w *World) ([]Entity, []T) {
 	var noop T
-	store, ok := w.components[noop.ID()].(*ComponentStore[T])
+	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
 		return nil, nil
 	}
@@ -124,21 +124,21 @@ func QueryAll[T Component](w *World) ([]Entity, []T) {
 
 // QueryIntersect2 performs a query finding the intersection of two components.
 // It returns the aligned slices of entities which have both components and
-// their associated data in order. Slices are possibly nil.
+// their associated data in order.
 //
 // Time Complexity: O(N) where N = min(# Entities with T, # Entities with V)
 func QueryIntersect2[T Component, V Component](w *World) ([]Entity, []T, []V) {
 	var noopT T
 	var noopV V
-	storeT, okT := w.components[noopT.ID()].(*ComponentStore[T])
-	storeV, okV := w.components[noopV.ID()].(*ComponentStore[V])
+	storeT, okT := w.components[noopT.ID()].(*componentStore[T])
+	storeV, okV := w.components[noopV.ID()].(*componentStore[V])
+	es := make([]Entity, 0)
+	ts := make([]T, 0)
+	vs := make([]V, 0)
 	if !(okT && okV) {
-		return nil, nil, nil
+		return es, ts, vs
 	}
 	if len(storeT.entityList) < len(storeV.entityList) {
-		es := make([]Entity, 0)
-		ts := make([]T, 0)
-		vs := make([]V, 0)
 		for idxT, e := range storeT.entityList {
 			idxV := storeV.entityIndices.At(int(e.ID()))
 			if idxV >= 0 {
@@ -147,11 +147,7 @@ func QueryIntersect2[T Component, V Component](w *World) ([]Entity, []T, []V) {
 				vs = append(vs, storeV.componentList[idxV])
 			}
 		}
-		return es, ts, vs
 	} else {
-		es := make([]Entity, 0)
-		ts := make([]T, 0)
-		vs := make([]V, 0)
 		for idxV, e := range storeV.entityList {
 			idxT := storeT.entityIndices.At(int(e.ID()))
 			if idxT >= 0 {
@@ -160,8 +156,8 @@ func QueryIntersect2[T Component, V Component](w *World) ([]Entity, []T, []V) {
 				vs = append(vs, storeV.componentList[idxV])
 			}
 		}
-		return es, ts, vs
 	}
+	return es, ts, vs
 }
 
 // QueryEntities2 performs a query finding the intersection of two components.
@@ -172,12 +168,12 @@ func QueryIntersect2[T Component, V Component](w *World) ([]Entity, []T, []V) {
 func QueryEntities2[T Component, V Component](w *World) []Entity {
 	var noopT T
 	var noopV V
-	storeT, okT := w.components[noopT.ID()].(*ComponentStore[T])
-	storeV, okV := w.components[noopV.ID()].(*ComponentStore[V])
-	if !(okT && okV) {
-		return nil
-	}
+	storeT, okT := w.components[noopT.ID()].(*componentStore[T])
+	storeV, okV := w.components[noopV.ID()].(*componentStore[V])
 	es := make([]Entity, 0)
+	if !(okT && okV) {
+		return es
+	}
 	if len(storeT.entityList) < len(storeV.entityList) {
 		for _, e := range storeT.entityList {
 			idxV := storeV.entityIndices.At(int(e.ID()))
@@ -198,20 +194,20 @@ func QueryEntities2[T Component, V Component](w *World) []Entity {
 
 // QueryEntities3 performs a query for the intersection of three components.
 // It returns a packed slice of entities which have all components but not
-// their associated data. Used with QueryMut to mutate data. Slices can be nil.
+// their associated data. Used with QueryMut to mutate data.
 //
 // Time Complexity: O(N) where N = min(# Entities of a component type)
 func QueryEntities3[A Component, B Component, C Component](w *World) []Entity {
 	var noopA A
 	var noopB B
 	var noopC C
-	storeA, okA := w.components[noopA.ID()].(*ComponentStore[A])
-	storeB, okB := w.components[noopB.ID()].(*ComponentStore[B])
-	storeC, okC := w.components[noopC.ID()].(*ComponentStore[C])
-	if !(okA && okB && okC) {
-		return nil
-	}
+	storeA, okA := w.components[noopA.ID()].(*componentStore[A])
+	storeB, okB := w.components[noopB.ID()].(*componentStore[B])
+	storeC, okC := w.components[noopC.ID()].(*componentStore[C])
 	es := make([]Entity, 0)
+	if !(okA && okB && okC) {
+		return es
+	}
 	lenA := len(storeA.entityList)
 	lenB := len(storeB.entityList)
 	lenC := len(storeC.entityList)
@@ -250,7 +246,7 @@ func QueryEntities3[A Component, B Component, C Component](w *World) []Entity {
 
 // QueryEntities4 performs a query for the intersection of four components.
 // It returns a packed slice of entities which have all components but not
-// their associated data. Used with QueryMut to mutate data. Slices can be nil.
+// their associated data. Used with QueryMut to mutate data.
 //
 // Time Complexity: O(N) where N = min(# Entities of a component type)
 func QueryEntities4[
@@ -263,14 +259,14 @@ func QueryEntities4[
 	var noopB B
 	var noopC C
 	var noopD D
-	storeA, okA := w.components[noopA.ID()].(*ComponentStore[A])
-	storeB, okB := w.components[noopB.ID()].(*ComponentStore[B])
-	storeC, okC := w.components[noopC.ID()].(*ComponentStore[C])
-	storeD, okD := w.components[noopD.ID()].(*ComponentStore[D])
-	if !(okA && okB && okC && okD) {
-		return nil
-	}
+	storeA, okA := w.components[noopA.ID()].(*componentStore[A])
+	storeB, okB := w.components[noopB.ID()].(*componentStore[B])
+	storeC, okC := w.components[noopC.ID()].(*componentStore[C])
+	storeD, okD := w.components[noopD.ID()].(*componentStore[D])
 	es := make([]Entity, 0)
+	if !(okA && okB && okC && okD) {
+		return es
+	}
 	lenA := len(storeA.entityList)
 	lenB := len(storeB.entityList)
 	lenC := len(storeC.entityList)
@@ -318,6 +314,108 @@ func QueryEntities4[
 			if idxA >= 0 &&
 				idxB >= 0 &&
 				idxC >= 0 {
+				es = append(es, e)
+			}
+		}
+	}
+	return es
+}
+
+// QueryEntities5 performs a query for the intersection of five components.
+// It returns a packed slice of entities which have all components but not
+// their associated data. Used with QueryMut to mutate data.
+//
+// Time Complexity: O(N) where N = min(# Entities of a component type)
+func QueryEntities5[
+	A Component,
+	B Component,
+	C Component,
+	D Component,
+	E Component,
+](w *World) []Entity {
+	var noopA A
+	var noopB B
+	var noopC C
+	var noopD D
+	var noopE E
+	storeA, okA := w.components[noopA.ID()].(*componentStore[A])
+	storeB, okB := w.components[noopB.ID()].(*componentStore[B])
+	storeC, okC := w.components[noopC.ID()].(*componentStore[C])
+	storeD, okD := w.components[noopD.ID()].(*componentStore[D])
+	storeE, okE := w.components[noopE.ID()].(*componentStore[E])
+	es := make([]Entity, 0)
+	if !(okA && okB && okC && okD && okE) {
+		return es
+	}
+	lenA := len(storeA.entityList)
+	lenB := len(storeB.entityList)
+	lenC := len(storeC.entityList)
+	lenD := len(storeD.entityList)
+	lenE := len(storeE.entityList)
+	minLen := slices.Min([]int{lenA, lenB, lenC, lenD, lenE})
+	switch minLen {
+	case lenA:
+		for _, e := range storeA.entityList {
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			idxE := storeE.entityIndices.At(int(e.ID()))
+			if idxB >= 0 &&
+				idxC >= 0 &&
+				idxD >= 0 &&
+				idxE >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenB:
+		for _, e := range storeB.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			idxE := storeE.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxC >= 0 &&
+				idxD >= 0 &&
+				idxE >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenC:
+		for _, e := range storeC.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			idxE := storeE.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxB >= 0 &&
+				idxD >= 0 &&
+				idxE >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenD:
+		for _, e := range storeD.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			idxE := storeE.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxB >= 0 &&
+				idxC >= 0 &&
+				idxE >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenE:
+		for _, e := range storeE.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxB >= 0 &&
+				idxC >= 0 &&
+				idxD >= 0 {
 				es = append(es, e)
 			}
 		}
