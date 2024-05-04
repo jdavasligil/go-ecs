@@ -4,11 +4,26 @@
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-informational?style=flat-square)](COPYRIGHT.md)
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-Go ECS is a simple Entity Component System framework.
+Go ECS is a simple sparse set, query based Entity Component System (ECS) library.
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+This ECS implementation uses a sparse set style data structure for packing the
+entity and component (arbitrary data) arrays while allowing O(1) entity lookups.
+It is simple and lightweight.
+
+Iterating over a list of entities and components is optimal. However, iterating
+over archetypes with multiple components is only supported through O(N) queries.
+There is no grouping feature to improve query time as of now. However, this is
+still very fast and allows for extremely fast add and remove operations.
+
+Creation and destruction must be handled by the user. Systems are not managed
+by the world: there is no scheduler or event system. There are only queries.
+The rest is up to the programmer. This is not a framework, just another tool.
+
+This package has no external dependencies and avoids reflection by way of Go's
+limited generic types. As a tradeoff, a separate query function must be written
+for every number of components queried (Go does not support variadic generics).
 
 ## Authors
 
@@ -17,7 +32,7 @@ Jaedin Davasligil
 
 ## Version History
 
-* In-Dev
+* 1.0.0
 
 ## Contributing
 Unless you explicitly state otherwise, any contribution intentionally submitted
