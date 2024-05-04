@@ -105,7 +105,6 @@ func (p *PageArray) Reset() {
 func (p *PageArray) At(idx int) int {
 	pageIdx := idx >> p.pow2
 	offset := idx & ((1 << p.pow2) - 1)
-	// Should we do bounds checking here, or leave it up to the caller?
 	if len(p.pages) <= pageIdx || p.pages[pageIdx] == nil {
 		//log.Printf("LEN: %d <= IDX: %d\n", len(p.pages), pageIdx)
 		return -1

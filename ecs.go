@@ -1,5 +1,7 @@
 package ecs
 
+import "slices"
+
 // https://gist.github.com/dakom/82551fff5d2b843cbe1601bbaff2acbf
 
 const (
@@ -239,6 +241,83 @@ func QueryEntities3[A Component, B Component, C Component](w *World) []Entity {
 			idxB := storeB.entityIndices.At(int(e.ID()))
 			if idxA >= 0 &&
 				idxB >= 0 {
+				es = append(es, e)
+			}
+		}
+	}
+	return es
+}
+
+// QueryEntities4 performs a query for the intersection of four components.
+// It returns a packed slice of entities which have all components but not
+// their associated data. Used with QueryMut to mutate data. Slices can be nil.
+//
+// Time Complexity: O(N) where N = min(# Entities of a component type)
+func QueryEntities4[
+	A Component,
+	B Component,
+	C Component,
+	D Component,
+](w *World) []Entity {
+	var noopA A
+	var noopB B
+	var noopC C
+	var noopD D
+	storeA, okA := w.components[noopA.ID()].(*ComponentStore[A])
+	storeB, okB := w.components[noopB.ID()].(*ComponentStore[B])
+	storeC, okC := w.components[noopC.ID()].(*ComponentStore[C])
+	storeD, okD := w.components[noopD.ID()].(*ComponentStore[D])
+	if !(okA && okB && okC && okD) {
+		return nil
+	}
+	es := make([]Entity, 0)
+	lenA := len(storeA.entityList)
+	lenB := len(storeB.entityList)
+	lenC := len(storeC.entityList)
+	lenD := len(storeD.entityList)
+	minLen := slices.Min([]int{lenA, lenB, lenC, lenD})
+	switch minLen {
+	case lenA:
+		for _, e := range storeA.entityList {
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			if idxB >= 0 &&
+				idxC >= 0 &&
+				idxD >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenB:
+		for _, e := range storeB.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxC >= 0 &&
+				idxD >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenC:
+		for _, e := range storeC.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxD := storeD.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxB >= 0 &&
+				idxD >= 0 {
+				es = append(es, e)
+			}
+		}
+	case lenD:
+		for _, e := range storeD.entityList {
+			idxA := storeA.entityIndices.At(int(e.ID()))
+			idxB := storeB.entityIndices.At(int(e.ID()))
+			idxC := storeC.entityIndices.At(int(e.ID()))
+			if idxA >= 0 &&
+				idxB >= 0 &&
+				idxC >= 0 {
 				es = append(es, e)
 			}
 		}
