@@ -66,8 +66,8 @@ func (p *componentStore[T]) Add(e Entity, c T) bool {
 }
 
 // Remove unregisters the entity from the component store and returns the
-// removed entity.
-func (p *componentStore[T]) Remove(e Entity) Entity {
+// removed entity. Page memory is not cleaned.
+func (p *componentStore[T]) RemoveAndClean(e Entity) Entity {
 	if !p.IsRegistered(e) {
 		return 0
 	}
@@ -81,6 +81,29 @@ func (p *componentStore[T]) Remove(e Entity) Entity {
 	p.entityIndices.Set(int(p.entityList[idx].ID()), idx)
 	// Unregister the removed entity.
 	p.entityIndices.SweepAndClear(int(e.ID()))
+	// Delete the last entity/component.
+	p.entityList = p.entityList[:len(p.entityList)-1]
+	p.componentList = p.componentList[:len(p.componentList)-1]
+
+	return entity
+}
+
+// Remove unregisters the entity from the component store and returns the
+// removed entity. Page memory is not cleaned.
+func (p *componentStore[T]) Remove(e Entity) Entity {
+	if !p.IsRegistered(e) {
+		return 0
+	}
+	// Get index of the entity to be removed.
+	idx := p.entityIndices.At(int(e.ID()))
+	entity := p.entityList[idx]
+	// Swap the last entity/component with the one marked for removal.
+	p.entityList[idx] = p.entityList[len(p.entityList)-1]
+	p.componentList[idx] = p.componentList[len(p.componentList)-1]
+	// Update the new index location for the swapped data.
+	p.entityIndices.Set(int(p.entityList[idx].ID()), idx)
+	// Unregister the removed entity.
+	p.entityIndices.Clear(int(e.ID()))
 	// Delete the last entity/component.
 	p.entityList = p.entityList[:len(p.entityList)-1]
 	p.componentList = p.componentList[:len(p.componentList)-1]

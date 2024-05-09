@@ -79,7 +79,8 @@ func Add[T Component](w *World, e Entity, c T) bool {
 }
 
 // Remove will remove a component from an entity and returns the affected
-// entity or the null entity upon failure.
+// entity or the null entity upon failure. Remove opts out of cleaning unused
+// page memory. To clean paged memory, use RemoveAndClean.
 func Remove[T Component](w *World, e Entity) Entity {
 	var noop T
 	store, ok := w.components[noop.ID()].(*componentStore[T])
@@ -87,6 +88,30 @@ func Remove[T Component](w *World, e Entity) Entity {
 		return 0
 	}
 	return store.Remove(e)
+}
+
+// RemoveAndClean will remove a component from an entity and returns the
+// entity or the null entity upon failure. Cleaning paged memory is an
+// O(N) operation where N is the page size.
+func RemoveAndClean[T Component](w *World, e Entity) Entity {
+	var noop T
+	store, ok := w.components[noop.ID()].(*componentStore[T])
+	if !ok {
+		return 0
+	}
+	return store.RemoveAndClean(e)
+}
+
+// Sweep will iterate through the paginated entity index sparse array and
+// free memory of any empty pages. Cleaning all paged memory is an
+// O(MN) operation where M is the page count and N is the page size.
+func Sweep[T Component](w *World) {
+	var noop T
+	store, ok := w.components[noop.ID()].(*componentStore[T])
+	if !ok {
+		return
+	}
+	store.entityIndices.Sweep()
 }
 
 // Query returns a copy of the data queried for a single entity.
