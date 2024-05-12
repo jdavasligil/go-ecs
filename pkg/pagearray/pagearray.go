@@ -125,7 +125,9 @@ func (p *PageArray) At(idx int) int {
 func (p *PageArray) MemUsage() uintptr {
 	var intType int
 	var nilType []int
-	size := unsafe.Sizeof(*p) + unsafe.Sizeof(p.pages) + unsafe.Sizeof(p.pow2)
+	size := unsafe.Sizeof(*p)
+	size += unsafe.Sizeof(p.pages)
+	size += unsafe.Sizeof(p.pow2)
 	size += unsafe.Sizeof(nilType) * uintptr(p.nilCount)
 	size += unsafe.Sizeof(intType) * uintptr(len(p.pages)-int(p.nilCount)) * (uintptr(1 << p.pow2))
 	return size
