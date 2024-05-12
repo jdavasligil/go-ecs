@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"sync"
+	"unsafe"
 
 	"github.com/jdavasligil/go-ecs/pkg/pagearray"
 )
@@ -14,18 +14,7 @@ import (
 //	Add    - O(1)
 //	Remove - O(1)
 //	Query  - O(1)
-//
-// Thread Safety: To protect store from concurrent access, componentStore may
-//
-//	           be locked and unlocked directly. E.g.,
-//
-//	store := NewcomponentStore[Component]()
-//	store.Lock()
-//	store.Add(entity, component)
-//	store.Unlock()
 type componentStore[T Component] struct {
-	sync.Mutex
-
 	// entityIndices is a sparse array that holds the indices into EntityList.
 	// The array is indexed by the entity id itself. A value of -1 means empty.
 	entityIndices pagearray.PageArray
@@ -129,14 +118,12 @@ func (p *componentStore[T]) GetMutComponent(e Entity) (*T, bool) {
 	return &p.componentList[p.entityIndices.At(int(e.ID()))], true
 }
 
-// Retrieves the slice of all component data independent of the entities.
-func (p *componentStore[T]) Components() []T {
-	return p.componentList
-}
-
-// Retrieves the slice of all entities with this component registered.
 func (p *componentStore[T]) Entities() []Entity {
 	return p.entityList
+}
+
+func (p *componentStore[T]) Components() []T {
+	return p.componentList
 }
 
 func (p *componentStore[T]) Size() int {
@@ -149,4 +136,17 @@ func (p *componentStore[T]) Reset() {
 	p.entityIndices.Reset()
 	p.entityList = make([]Entity, 0, 256)
 	p.componentList = make([]T, 0, 256)
+}
+
+// MemUsage returns an estimate for the current memory being used in bytes.
+func (p *componentStore[T]) MemUsage() uintptr {
+	var entityType Entity
+	var componentType T
+	size := unsafe.Sizeof(*p)
+	size += unsafe.Sizeof(p.entityList)
+	size += unsafe.Sizeof(p.componentList)
+	size += unsafe.Sizeof(entityType) * uintptr(cap(p.entityList))
+	size += unsafe.Sizeof(componentType) * uintptr(cap(p.componentList))
+	size += p.entityIndices.MemUsage()
+	return size
 }

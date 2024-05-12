@@ -114,8 +114,17 @@ func Sweep[T Component](w *World) {
 	store.entityIndices.Sweep()
 }
 
-// Query returns a copy of the data queried for a single entity.
-func Query[T Component](w *World, e Entity) (T, bool) {
+func MemUsage[T Component](w *World) uintptr {
+	var noop T
+	store, ok := w.components[noop.ID()].(*componentStore[T])
+	if !ok {
+		return 0
+	}
+	return store.MemUsage()
+}
+
+// Get returns a copy of the component for a single entity.
+func Get[T Component](w *World, e Entity) (T, bool) {
 	var noop T
 	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
@@ -124,9 +133,9 @@ func Query[T Component](w *World, e Entity) (T, bool) {
 	return store.GetComponent(e)
 }
 
-// MutQuery returns a mutable reference to the underlying data queried for
+// GetMut returns a mutable reference to the underlying component for
 // a particular entity. Only a single caller may claim ownership at a time.
-func MutQuery[T Component](w *World, e Entity) (*T, bool) {
+func GetMut[T Component](w *World, e Entity) (*T, bool) {
 	var noop T
 	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
@@ -135,10 +144,10 @@ func MutQuery[T Component](w *World, e Entity) (*T, bool) {
 	return store.GetMutComponent(e)
 }
 
-// QueryAll returns slices to both the entities and their underlying data. The
+// Query returns slices to both the entities and their underlying data. The
 // data is mutable, packed, aligned, and so can be iterated together. Only a
 // single caller may claim mutable ownership at a time. Slices are possibly nil.
-func QueryAll[T Component](w *World) ([]Entity, []T) {
+func Query[T Component](w *World) ([]Entity, []T) {
 	var noop T
 	store, ok := w.components[noop.ID()].(*componentStore[T])
 	if !ok {
@@ -147,50 +156,12 @@ func QueryAll[T Component](w *World) ([]Entity, []T) {
 	return store.entityList, store.componentList
 }
 
-// QueryIntersect2 performs a query finding the intersection of two components.
-// It returns the aligned slices of entities which have both components and
-// their associated data in order.
-//
-// Time Complexity: O(N) where N = min(# Entities with T, # Entities with V)
-func QueryIntersect2[T Component, V Component](w *World) ([]Entity, []T, []V) {
-	var noopT T
-	var noopV V
-	storeT, okT := w.components[noopT.ID()].(*componentStore[T])
-	storeV, okV := w.components[noopV.ID()].(*componentStore[V])
-	es := make([]Entity, 0)
-	ts := make([]T, 0)
-	vs := make([]V, 0)
-	if !(okT && okV) {
-		return es, ts, vs
-	}
-	if len(storeT.entityList) < len(storeV.entityList) {
-		for idxT, e := range storeT.entityList {
-			idxV := storeV.entityIndices.At(int(e.ID()))
-			if idxV >= 0 {
-				es = append(es, e)
-				ts = append(ts, storeT.componentList[idxT])
-				vs = append(vs, storeV.componentList[idxV])
-			}
-		}
-	} else {
-		for idxV, e := range storeV.entityList {
-			idxT := storeT.entityIndices.At(int(e.ID()))
-			if idxT >= 0 {
-				es = append(es, e)
-				ts = append(ts, storeT.componentList[idxT])
-				vs = append(vs, storeV.componentList[idxV])
-			}
-		}
-	}
-	return es, ts, vs
-}
-
-// QueryEntities2 performs a query finding the intersection of two components.
+// Query2 performs a query finding the intersection of two components.
 // It returns a packed slice of entities which have both components but not
-// their associated data. Used with QueryMut to mutate data. Slices can be nil.
+// their associated data. Used with GetMut to mutate data. Slices can be nil.
 //
 // Time Complexity: O(N) where N = min(# Entities with T, # Entities with V)
-func QueryEntities2[T Component, V Component](w *World) []Entity {
+func Query2[T Component, V Component](w *World) []Entity {
 	var noopT T
 	var noopV V
 	storeT, okT := w.components[noopT.ID()].(*componentStore[T])
@@ -217,12 +188,12 @@ func QueryEntities2[T Component, V Component](w *World) []Entity {
 	return es
 }
 
-// QueryEntities3 performs a query for the intersection of three components.
+// Query3 performs a query for the intersection of three components.
 // It returns a packed slice of entities which have all components but not
-// their associated data. Used with QueryMut to mutate data.
+// their associated data. Used with GetMut to mutate data.
 //
 // Time Complexity: O(N) where N = min(# Entities of a component type)
-func QueryEntities3[A Component, B Component, C Component](w *World) []Entity {
+func Query3[A Component, B Component, C Component](w *World) []Entity {
 	var noopA A
 	var noopB B
 	var noopC C
@@ -269,12 +240,12 @@ func QueryEntities3[A Component, B Component, C Component](w *World) []Entity {
 	return es
 }
 
-// QueryEntities4 performs a query for the intersection of four components.
+// Query4 performs a query for the intersection of four components.
 // It returns a packed slice of entities which have all components but not
-// their associated data. Used with QueryMut to mutate data.
+// their associated data. Used with GetMut to mutate data.
 //
 // Time Complexity: O(N) where N = min(# Entities of a component type)
-func QueryEntities4[
+func Query4[
 	A Component,
 	B Component,
 	C Component,
@@ -346,12 +317,12 @@ func QueryEntities4[
 	return es
 }
 
-// QueryEntities5 performs a query for the intersection of five components.
+// Query5 performs a query for the intersection of five components.
 // It returns a packed slice of entities which have all components but not
-// their associated data. Used with QueryMut to mutate data.
+// their associated data. Used with GetMut to mutate data.
 //
 // Time Complexity: O(N) where N = min(# Entities of a component type)
-func QueryEntities5[
+func Query5[
 	A Component,
 	B Component,
 	C Component,

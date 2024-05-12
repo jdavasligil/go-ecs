@@ -52,24 +52,26 @@ func TestEcs(t *testing.T) {
 		testutil.AssertEqual(t, ecs.Add(&world, player, Velocity{-1.0, -2.0, -3.0}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, player, Health{16}), true)
 	})
+
 	t.Run("RegisterQuery", func(t *testing.T) {
 		world := ecs.NewWorld()
 		player := world.NewEntity()
 		testutil.AssertEqual(t, ecs.Register(&world, player, Position{1.0, 2.0, 3.0}), true)
 		testutil.AssertEqual(t, ecs.Register(&world, player, Velocity{-1.0, -2.0, -3.0}), true)
-		pos, ok := ecs.Query[Position](&world, player)
+		pos, ok := ecs.Get[Position](&world, player)
 		testutil.AssertEqual(t, ok, true)
 		testutil.AssertEqual(t, pos.x, 1.0)
-		vel, ok := ecs.Query[Velocity](&world, player)
+		vel, ok := ecs.Get[Velocity](&world, player)
 		testutil.AssertEqual(t, ok, true)
 		testutil.AssertEqual(t, vel.x, -1.0)
-		mutVel, ok := ecs.MutQuery[Velocity](&world, player)
+		mutVel, ok := ecs.GetMut[Velocity](&world, player)
 		testutil.AssertEqual(t, ok, true)
 		mutVel.x = 0.0
-		vel, ok = ecs.Query[Velocity](&world, player)
+		vel, ok = ecs.Get[Velocity](&world, player)
 		testutil.AssertEqual(t, ok, true)
 		testutil.AssertEqual(t, vel.x, 0.0)
 	})
+
 	t.Run("AddRemove", func(t *testing.T) {
 		world := ecs.NewWorld()
 		ecs.Initialize[Position](&world)
@@ -79,15 +81,16 @@ func TestEcs(t *testing.T) {
 		testutil.AssertEqual(t, ecs.Add(&world, player, Position{1.0, 2.0, 3.0}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, player, Velocity{-1.0, -2.0, -3.0}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, player, Health{16}), true)
-		hp, ok := ecs.Query[Health](&world, player)
+		hp, ok := ecs.Get[Health](&world, player)
 		testutil.AssertEqual(t, ok, true)
 		testutil.AssertEqual(t, hp.hp, 16)
 		testutil.AssertEqual(t, ecs.Remove[Health](&world, player), player)
 		testutil.AssertEqual(t, ecs.Remove[Health](&world, player), 0)
-		hp, ok = ecs.Query[Health](&world, player)
+		hp, ok = ecs.Get[Health](&world, player)
 		testutil.AssertEqual(t, ok, false)
 	})
-	t.Run("QueryAll", func(t *testing.T) {
+
+	t.Run("Query", func(t *testing.T) {
 		world := ecs.NewWorld()
 		ecs.Initialize[Position](&world)
 		ecs.Initialize[Velocity](&world)
@@ -100,7 +103,7 @@ func TestEcs(t *testing.T) {
 		testutil.AssertEqual(t, ecs.Add(&world, player, Health{16}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, npc1, Position{1.0, 1.0, 1.0}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, npc2, Position{2.0, 2.0, 2.0}), true)
-		es, ps := ecs.QueryAll[Position](&world)
+		es, ps := ecs.Query[Position](&world)
 		for i, e := range es {
 			switch e {
 			case player:
@@ -112,7 +115,8 @@ func TestEcs(t *testing.T) {
 			}
 		}
 	})
-	t.Run("QueryIntersect2", func(t *testing.T) {
+
+	t.Run("Query2", func(t *testing.T) {
 		world := ecs.NewWorld()
 		ecs.Initialize[Position](&world)
 		ecs.Initialize[Velocity](&world)
@@ -125,61 +129,31 @@ func TestEcs(t *testing.T) {
 		testutil.AssertEqual(t, ecs.Add(&world, npc1, Position{1.0, 1.0, 1.0}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, npc1, Health{14}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, npc2, Position{2.0, 2.0, 2.0}), true)
-		es, ps, hs := ecs.QueryIntersect2[Position, Health](&world)
-		testutil.AssertEqual(t, len(es), 2)
-		for i, e := range es {
-			switch e {
-			case player:
-				testutil.AssertEqual(t, ps[i].z, 3)
-				testutil.AssertEqual(t, hs[i].hp, 16)
-			case npc1:
-				testutil.AssertEqual(t, ps[i].z, 1)
-				testutil.AssertEqual(t, hs[i].hp, 14)
-			}
-		}
-		es, ps, vs := ecs.QueryIntersect2[Position, Velocity](&world)
-		testutil.AssertEqual(t, len(es), 0)
-		testutil.AssertEqual(t, len(ps), 0)
-		testutil.AssertEqual(t, len(vs), 0)
-	})
-	t.Run("QueryEntities2", func(t *testing.T) {
-		world := ecs.NewWorld()
-		ecs.Initialize[Position](&world)
-		ecs.Initialize[Velocity](&world)
-		ecs.Initialize[Health](&world)
-		player := world.NewEntity()
-		npc1 := world.NewEntity()
-		npc2 := world.NewEntity()
-		testutil.AssertEqual(t, ecs.Add(&world, player, Position{1.0, 2.0, 3.0}), true)
-		testutil.AssertEqual(t, ecs.Add(&world, player, Health{16}), true)
-		testutil.AssertEqual(t, ecs.Add(&world, npc1, Position{1.0, 1.0, 1.0}), true)
-		testutil.AssertEqual(t, ecs.Add(&world, npc1, Health{14}), true)
-		testutil.AssertEqual(t, ecs.Add(&world, npc2, Position{2.0, 2.0, 2.0}), true)
-		es := ecs.QueryEntities2[Position, Health](&world)
+		es := ecs.Query2[Position, Health](&world)
 		testutil.AssertEqual(t, len(es), 2)
 		for _, e := range es {
 			switch e {
 			case player:
-				pos, ok := ecs.Query[Position](&world, e)
+				pos, ok := ecs.Get[Position](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, pos.z, 3.0)
-				hp, ok := ecs.Query[Health](&world, e)
+				hp, ok := ecs.Get[Health](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, hp.hp, 16)
 			case npc1:
-				pos, ok := ecs.Query[Position](&world, e)
+				pos, ok := ecs.Get[Position](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, pos.z, 1.0)
-				hp, ok := ecs.Query[Health](&world, e)
+				hp, ok := ecs.Get[Health](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, hp.hp, 14)
 			}
 		}
-		es = ecs.QueryEntities2[Position, Velocity](&world)
+		es = ecs.Query2[Position, Velocity](&world)
 		testutil.AssertEqual(t, len(es), 0)
 	})
 
-	t.Run("QueryEntities3", func(t *testing.T) {
+	t.Run("Query3", func(t *testing.T) {
 		world := ecs.NewWorld()
 		ecs.Initialize[Position](&world)
 		ecs.Initialize[Velocity](&world)
@@ -194,28 +168,28 @@ func TestEcs(t *testing.T) {
 		testutil.AssertEqual(t, ecs.Add(&world, npc1, Velocity{1.0, 1.0, 1.0}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, npc1, Health{14}), true)
 		testutil.AssertEqual(t, ecs.Add(&world, npc2, Position{2.0, 2.0, 2.0}), true)
-		es := ecs.QueryEntities3[Position, Velocity, Health](&world)
+		es := ecs.Query3[Position, Velocity, Health](&world)
 		testutil.AssertEqual(t, len(es), 2)
 		for _, e := range es {
 			switch e {
 			case player:
-				pos, ok := ecs.Query[Position](&world, e)
+				pos, ok := ecs.Get[Position](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, pos.z, 3.0)
-				vel, ok := ecs.Query[Velocity](&world, e)
+				vel, ok := ecs.Get[Velocity](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, vel.x, 2.0)
-				hp, ok := ecs.Query[Health](&world, e)
+				hp, ok := ecs.Get[Health](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, hp.hp, 16)
 			case npc1:
-				pos, ok := ecs.Query[Position](&world, e)
+				pos, ok := ecs.Get[Position](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, pos.z, 1.0)
-				vel, ok := ecs.Query[Velocity](&world, e)
+				vel, ok := ecs.Get[Velocity](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, vel.x, 1.0)
-				hp, ok := ecs.Query[Health](&world, e)
+				hp, ok := ecs.Get[Health](&world, e)
 				testutil.AssertEqual(t, ok, true)
 				testutil.AssertEqual(t, hp.hp, 14)
 			}
@@ -229,6 +203,7 @@ func BenchmarkEcs(b *testing.B) {
 	ecs.Initialize[Velocity](&world)
 	ecs.Initialize[Health](&world)
 	entities := make([]ecs.Entity, ecs.MAX_ENTITIES)
+
 	for i := range entities {
 		entities[i] = world.NewEntity()
 		ecs.Add(&world, entities[i], Position{float32(i + 1), 0.0, 0.0})
@@ -239,23 +214,16 @@ func BenchmarkEcs(b *testing.B) {
 			ecs.Add(&world, entities[i], Health{i + 1})
 		}
 	}
+
 	b.Logf("Entity Count: %d", world.EntityCount())
-	b.Run("QueryIntersect2", func(b *testing.B) {
-		es, ps, hs := ecs.QueryIntersect2[Position, Health](&world)
-		var pcount float32 = 0.0
-		hcount := 0
-		for i := range es {
-			pcount += ps[i].x
-			hcount += hs[i].hp
-		}
-	})
-	b.Run("QueryEntities2", func(b *testing.B) {
-		es := ecs.QueryEntities2[Position, Health](&world)
+
+	b.Run("Query2", func(b *testing.B) {
+		es := ecs.Query2[Position, Health](&world)
 		var pcount float32 = 0.0
 		hcount := 0
 		for _, e := range es {
-			pos, _ := ecs.Query[Position](&world, e)
-			hp, _ := ecs.Query[Health](&world, e)
+			pos, _ := ecs.Get[Position](&world, e)
+			hp, _ := ecs.Get[Health](&world, e)
 			pcount += pos.x
 			hcount += hp.hp
 		}

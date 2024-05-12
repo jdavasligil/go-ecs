@@ -11,6 +11,9 @@ type PageArray struct {
 
 	// Logarithmic page size (power of 2).
 	pow2 uint32
+
+	// Track how many nil pages there are.
+	nilCount uint32
 }
 
 func NewPageArray(pow2 uint32) PageArray {
@@ -28,12 +31,14 @@ func (p *PageArray) Set(idx int, val int) {
 	offset := idx & ((1 << p.pow2) - 1)
 	for len(p.pages) <= pageIdx {
 		p.pages = append(p.pages, nil)
+		p.nilCount++
 	}
 	if p.pages[pageIdx] == nil {
 		p.pages[pageIdx] = make([]int, 1<<p.pow2)
 		for i := 0; i < len(p.pages[pageIdx]); i++ {
 			p.pages[pageIdx][i] = -1
 		}
+		p.nilCount--
 	}
 	p.pages[pageIdx][offset] = val
 }
@@ -69,9 +74,11 @@ func (p *PageArray) Sweep() {
 			}
 			if pageEmpty {
 				p.pages[pageIdx] = nil
+				p.nilCount++
 			}
 		}
 	}
+	p.nilCount -= uint32(nilOffset)
 	p.pages = p.pages[:len(p.pages)-nilOffset]
 }
 
@@ -92,12 +99,14 @@ func (p *PageArray) SweepAndClear(idx int) {
 		}
 	}
 	p.pages[pageIdx] = nil
+	p.nilCount++
 }
 
 // Reset performs a hard reset by throwing away all allocated memory for
 // garbage collection. May negatively affect garbage collection performance.
 func (p *PageArray) Reset() {
 	p.pages = make([][]int, 0)
+	p.nilCount = 0
 }
 
 // At gets the current value at the given index, otherwise it returns -1 to
@@ -114,13 +123,10 @@ func (p *PageArray) At(idx int) int {
 
 // MemUsage returns an estimate for the current memory being used in bytes.
 func (p *PageArray) MemUsage() uintptr {
+	var intType int
+	var nilType []int
 	size := unsafe.Sizeof(*p) + unsafe.Sizeof(p.pages) + unsafe.Sizeof(p.pow2)
-	var myInt int = 0
-	for i := 0; i < len(p.pages); i++ {
-		size += unsafe.Sizeof(p.pages[i])
-		if p.pages[i] != nil {
-			size += uintptr(cap(p.pages[i])) * unsafe.Sizeof(myInt)
-		}
-	}
+	size += unsafe.Sizeof(nilType) * uintptr(p.nilCount)
+	size += unsafe.Sizeof(intType) * uintptr(len(p.pages)-int(p.nilCount)) * (uintptr(1 << p.pow2))
 	return size
 }
