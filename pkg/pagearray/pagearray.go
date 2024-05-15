@@ -79,7 +79,7 @@ func (p *PageArray) Sweep() {
 		}
 	}
 	p.nilCount -= uint32(nilOffset)
-	p.pages = p.pages[:len(p.pages)-nilOffset]
+	p.pages = append([][]int(nil), p.pages[:len(p.pages)-nilOffset]...)
 }
 
 // SweepAndClear is used to remove a value at an index by marking it as empty

@@ -74,8 +74,8 @@ func (p *componentStore[T]) RemoveAndClean(e Entity) bool {
 	// Unregister the removed entity.
 	p.entityIndices.SweepAndClear(int(e.ID()))
 	// Delete the last entity/component.
-	p.entityList = p.entityList[:len(p.entityList)-1]
-	p.componentList = p.componentList[:len(p.componentList)-1]
+	p.entityList = append([]Entity(nil), p.entityList[:len(p.entityList)-1]...)
+	p.componentList = append([]T(nil), p.componentList[:len(p.componentList)-1]...)
 
 	return true
 }
