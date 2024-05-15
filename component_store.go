@@ -6,14 +6,14 @@ import (
 	"github.com/jdavasligil/go-ecs/pkg/pagearray"
 )
 
-// componentStore is a sparse set used for each registered Component type which maps
-// entities to their components.
+// componentStore is a sparse set used for each registered Component type which
+// maps entities to their components.
 //
 // Time Complexity:
 //
 //	Add    - O(1)
+//	Get    - O(1)
 //	Remove - O(1)
-//	Query  - O(1)
 type componentStore[T Component] struct {
 	// entityIndices is a sparse array that holds the indices into EntityList.
 	// The array is indexed by the entity id itself. A value of -1 means empty.
@@ -30,9 +30,13 @@ type componentStore[T Component] struct {
 }
 
 // NewcomponentStore constructs a component store for a particular component type.
-func NewComponentStore[T Component]() *componentStore[T] {
+
+// Parameters:
+//
+//	pow2 - Page size is 2^(pow2) bytes.
+func newComponentStore[T Component](pow2 uint32) *componentStore[T] {
 	p := &componentStore[T]{
-		entityIndices: pagearray.NewPageArray(10), // Page size 1024
+		entityIndices: pagearray.NewPageArray(pow2), // Page size 1024
 		entityList:    make([]Entity, 0),
 		componentList: make([]T, 0),
 	}
@@ -56,13 +60,12 @@ func (p *componentStore[T]) Add(e Entity, c T) bool {
 
 // Remove unregisters the entity from the component store and returns the
 // removed entity. Page memory is not cleaned.
-func (p *componentStore[T]) RemoveAndClean(e Entity) Entity {
+func (p *componentStore[T]) RemoveAndClean(e Entity) bool {
 	if !p.IsRegistered(e) {
-		return 0
+		return false
 	}
 	// Get index of the entity to be removed.
 	idx := p.entityIndices.At(int(e.ID()))
-	entity := p.entityList[idx]
 	// Swap the last entity/component with the one marked for removal.
 	p.entityList[idx] = p.entityList[len(p.entityList)-1]
 	p.componentList[idx] = p.componentList[len(p.componentList)-1]
@@ -74,18 +77,17 @@ func (p *componentStore[T]) RemoveAndClean(e Entity) Entity {
 	p.entityList = p.entityList[:len(p.entityList)-1]
 	p.componentList = p.componentList[:len(p.componentList)-1]
 
-	return entity
+	return true
 }
 
 // Remove unregisters the entity from the component store and returns the
 // removed entity. Page memory is not cleaned.
-func (p *componentStore[T]) Remove(e Entity) Entity {
+func (p *componentStore[T]) Remove(e Entity) bool {
 	if !p.IsRegistered(e) {
-		return 0
+		return false
 	}
 	// Get index of the entity to be removed.
 	idx := p.entityIndices.At(int(e.ID()))
-	entity := p.entityList[idx]
 	// Swap the last entity/component with the one marked for removal.
 	p.entityList[idx] = p.entityList[len(p.entityList)-1]
 	p.componentList[idx] = p.componentList[len(p.componentList)-1]
@@ -97,7 +99,7 @@ func (p *componentStore[T]) Remove(e Entity) Entity {
 	p.entityList = p.entityList[:len(p.entityList)-1]
 	p.componentList = p.componentList[:len(p.componentList)-1]
 
-	return entity
+	return true
 }
 
 // Retrieves the component data associated with a specific entity.

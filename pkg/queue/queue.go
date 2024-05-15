@@ -7,4 +7,5 @@ type Queue[T any] interface {
 	Len() int
 	IsEmpty() bool
 	IsFull() bool
+	MemUsage() uintptr
 }

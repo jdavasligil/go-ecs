@@ -9,7 +9,7 @@ package ecs
 type Entity uint32
 
 // NewEntity requires that the provided id < 16777215.
-func NewEntity(id uint32) Entity {
+func newEntity(id uint32) Entity {
 	return Entity(id << 8)
 }
 

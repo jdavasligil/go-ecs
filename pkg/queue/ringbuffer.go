@@ -1,5 +1,7 @@
 package queue
 
+import "unsafe"
+
 type RingBuffer[T any] struct {
 	back     int
 	buf      []T
@@ -52,4 +54,15 @@ func (rb *RingBuffer[T]) IsEmpty() bool {
 
 func (rb *RingBuffer[T]) IsFull() bool {
 	return rb.length == rb.capacity
+}
+
+func (rb *RingBuffer[T]) MemUsage() uintptr {
+	var typeT T
+	size := unsafe.Sizeof(*rb)
+	size += unsafe.Sizeof(rb.back)
+	size += unsafe.Sizeof(rb.buf)
+	size += unsafe.Sizeof(typeT) * uintptr(cap(rb.buf))
+	size += unsafe.Sizeof(rb.length)
+	size += unsafe.Sizeof(rb.capacity)
+	return size
 }

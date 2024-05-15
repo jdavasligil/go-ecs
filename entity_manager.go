@@ -2,14 +2,16 @@ package ecs
 
 import (
 	"log"
+	"unsafe"
 
 	"github.com/jdavasligil/go-ecs/pkg/queue"
 )
 
-// https://austinmorlan.com/posts/entity_component_system/#what-is-an-ecs
-
 // The entityManager is responsible for distributing Entity IDs.
 type entityManager struct {
+	MaxEntities uint32
+	MaxRecycle  uint32
+
 	// Queue of discarded entity IDs for recycling.
 	bin queue.Queue[Entity]
 
@@ -20,16 +22,21 @@ type entityManager struct {
 	next uint32
 }
 
-func newEntityManager() entityManager {
+func newEntityManager(entityLimit uint32, recycleLimit uint32) entityManager {
+	elim := min(MAX_ENTITIES, entityLimit)
+	rlim := min(elim, recycleLimit)
 	return entityManager{
-		bin:  queue.NewRingBuffer[Entity](1024),
-		size: 0,
-		next: 1,
+		MaxEntities: elim,
+		MaxRecycle:  rlim,
+		bin:         queue.NewRingBuffer[Entity](int(rlim)),
+		size:        0,
+		next:        1,
 	}
 }
 
+// Creates an entity by recycling or incrementing to the next ID.
 func (em *entityManager) CreateEntity() Entity {
-	if em.size == MAX_ENTITIES {
+	if em.size == em.MaxEntities {
 		log.Printf("entityManager: Failed to create entity - manager is full.")
 		return 0
 	}
@@ -37,7 +44,7 @@ func (em *entityManager) CreateEntity() Entity {
 	var entity Entity
 
 	if em.bin.IsEmpty() {
-		entity = NewEntity(em.next)
+		entity = newEntity(em.next)
 		em.next += 1
 	} else {
 		entity = em.bin.Pop()
@@ -48,9 +55,10 @@ func (em *entityManager) CreateEntity() Entity {
 	return entity
 }
 
-// RecycleEntity only marks the entity as deleted and pushes it to the recycle
-// bin. The component data must also be deleted by removing that entity from
-// each associated component pool handled by the component manager.
+// RecycleEntity marks the entity as deleted and pushes it to the recycle bin.
+//
+// The component data must also be deleted by removing that entity from each
+// associated component store handled by the component manager.
 func (em *entityManager) RecycleEntity(entity Entity) bool {
 	if em.size == 0 {
 		log.Printf("entityManager: Failed to recycle entity - manager is empty.")
@@ -62,4 +70,14 @@ func (em *entityManager) RecycleEntity(entity Entity) bool {
 	em.size -= 1
 
 	return true
+}
+
+func (em *entityManager) MemUsage() uintptr {
+	size := unsafe.Sizeof(*em)
+	size += unsafe.Sizeof(em.MaxEntities)
+	size += unsafe.Sizeof(em.MaxRecycle)
+	size += em.bin.MemUsage()
+	size += unsafe.Sizeof(em.size)
+	size += unsafe.Sizeof(em.next)
+	return size
 }

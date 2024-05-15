@@ -1,14 +1,12 @@
-package ecs_test
+package ecs
 
 import (
 	"testing"
-
-	"github.com/jdavasligil/go-ecs"
 )
 
-func TestEntity(t *testing.T) {
+func testEntity(t *testing.T) {
 	var id uint32 = (1 << 24) - 997
-	var e ecs.Entity = ecs.NewEntity(id)
+	var e Entity = newEntity(id)
 
 	// Test Creation
 	if id != e.ID() {
