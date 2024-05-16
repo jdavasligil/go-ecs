@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
 
-# Project Title
+# GO ECS
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-informational?style=flat-square)](COPYRIGHT.md)
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
@@ -25,10 +25,34 @@ This package has no external dependencies and avoids reflection by way of Go's
 limited generic types. As a tradeoff, a separate query function must be written
 for every number of components queried (Go does not support variadic generics).
 
+## Usage
+
+Go get the package.
+
+```zsh
+go get github.com/jdavasligil/go-ecs@latest
+```
+
+Import the package.
+
+```golang
+import (
+    "github.com/jdavasligil/go-ecs"
+)
+```
+
+See the examples folder for code examples. The basic example
+should be enough to get you going.
+
+You can run the example with the following.
+
+```zsh
+go run ./examples/basic
+```
+
 ## Authors
 
-Jaedin Davasligil
-[contact](jdavasligil.swimming625@slmails.com)
+[J. Davasligil](jdavasligil.swimming625@slmails.com)
 
 ## Version History
 

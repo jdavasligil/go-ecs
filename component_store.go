@@ -6,6 +6,9 @@ import (
 	"github.com/jdavasligil/go-ecs/pkg/pagearray"
 )
 
+// 2^8 = 256 is the default page size. This can be changed for optimization.
+const DEFAULT_PAGE_SIZE = 8
+
 // componentStore is a sparse set used for each registered Component type which
 // maps entities to their components.
 //
@@ -30,13 +33,13 @@ type componentStore[T Component] struct {
 }
 
 // NewcomponentStore constructs a component store for a particular component type.
-
+//
 // Parameters:
 //
 //	pow2 - Page size is 2^(pow2) bytes.
 func newComponentStore[T Component](pow2 uint32) *componentStore[T] {
 	p := &componentStore[T]{
-		entityIndices: pagearray.NewPageArray(pow2), // Page size 1024
+		entityIndices: pagearray.NewPageArray(pow2),
 		entityList:    make([]Entity, 0),
 		componentList: make([]T, 0),
 	}

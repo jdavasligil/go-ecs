@@ -25,7 +25,7 @@ func (e *Entity) ID() uint32 {
 }
 
 // Next updates the Entity's Version (Generation) upon deletion in place.
-func (e *Entity) Next() {
+func (e *Entity) next() {
 	if e.Version() == 255 {
 		*e -= 255
 	} else {

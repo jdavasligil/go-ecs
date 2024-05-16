@@ -65,7 +65,7 @@ func (em *entityManager) RecycleEntity(entity Entity) bool {
 		return false
 	}
 
-	entity.Next()
+	entity.next()
 	em.bin.Push(entity)
 	em.size -= 1
 

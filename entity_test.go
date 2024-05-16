@@ -17,7 +17,7 @@ func testEntity(t *testing.T) {
 	}
 
 	// Test Next
-	e.Next()
+	e.next()
 	if id != e.ID() {
 		t.Errorf("Expected: %d, Got: %d", id, e.ID())
 	}
@@ -27,7 +27,7 @@ func testEntity(t *testing.T) {
 
 	// Test Rollover
 	for i := 0; i < 255; i++ {
-		e.Next()
+		e.next()
 	}
 	if id != e.ID() {
 		t.Errorf("Expected: %d, Got: %d", id, e.ID())
