@@ -6,9 +6,6 @@ import (
 	"github.com/jdavasligil/go-ecs/pkg/pagearray"
 )
 
-// 2^8 = 256 is the default page size. This can be changed for optimization.
-const DEFAULT_PAGE_SIZE = 8
-
 // componentStore is a sparse set used for each registered Component type which
 // maps entities to their components.
 //
@@ -33,13 +30,9 @@ type componentStore[T Component] struct {
 }
 
 // NewcomponentStore constructs a component store for a particular component type.
-//
-// Parameters:
-//
-//	pow2 - Page size is 2^(pow2) bytes.
-func newComponentStore[T Component](pow2 uint32) *componentStore[T] {
+func newComponentStore[T Component]() *componentStore[T] {
 	p := &componentStore[T]{
-		entityIndices: pagearray.NewPageArray(pow2),
+		entityIndices: pagearray.NewPageArray(),
 		entityList:    make([]Entity, 0),
 		componentList: make([]T, 0),
 	}
@@ -61,8 +54,8 @@ func (p *componentStore[T]) Add(e Entity, c T) bool {
 	return true
 }
 
-// Remove unregisters the entity from the component store and returns the
-// removed entity. Page memory is not cleaned.
+// RemoveAndClean unregisters the entity from the component.
+// Memory is reallocated causing a GC dump. Use sparingly.
 func (p *componentStore[T]) RemoveAndClean(e Entity) bool {
 	if !p.IsRegistered(e) {
 		return false
@@ -83,8 +76,8 @@ func (p *componentStore[T]) RemoveAndClean(e Entity) bool {
 	return true
 }
 
-// Remove unregisters the entity from the component store and returns the
-// removed entity. Page memory is not cleaned.
+// Remove unregisters the entity from the component store.
+// Memory is not reallocated. This is good if you want to reuse the memory.
 func (p *componentStore[T]) Remove(e Entity) bool {
 	if !p.IsRegistered(e) {
 		return false

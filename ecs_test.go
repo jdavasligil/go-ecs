@@ -15,10 +15,10 @@ func TestEcs(t *testing.T) {
 	})
 	player := world.NewEntity()
 	t.Run("Initialize", func(t *testing.T) {
-		ecs.Initialize[Position](&world, PositionPageSize)
-		ecs.Initialize[Velocity](&world, VelocityPageSize)
-		ecs.Initialize[Health](&world, HealthPageSize)
-		ecs.Initialize[CombatTag](&world, CombatTagPageSize)
+		ecs.Initialize[Position](&world)
+		ecs.Initialize[Velocity](&world)
+		ecs.Initialize[Health](&world)
+		ecs.Initialize[CombatTag](&world)
 	})
 	t.Run("AddRemove", func(t *testing.T) {
 		testutil.AssertEqual(t, ecs.Add(&world, player, Position{1.0, 2.0, 3.0}), true)

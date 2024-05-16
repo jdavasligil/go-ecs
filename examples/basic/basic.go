@@ -40,11 +40,10 @@ func main() {
 		ComponentLimit: ecs.MAX_COMPONENTS, // Limit on components registered.
 	})
 
-	// Component stores must be initialized with a logarithmic page size.
-	// Stick with the default size unless you know what you're doing.
-	ecs.Initialize[Position](&world, ecs.DEFAULT_PAGE_SIZE)
-	ecs.Initialize[Velocity](&world, ecs.DEFAULT_PAGE_SIZE)
-	ecs.Initialize[Tag](&world, ecs.DEFAULT_PAGE_SIZE)
+	// Component stores must be initialized for each component.
+	ecs.Initialize[Position](&world)
+	ecs.Initialize[Velocity](&world)
+	ecs.Initialize[Tag](&world)
 
 	entity1 := world.NewEntity()
 	entity2 := world.NewEntity()

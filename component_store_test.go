@@ -16,7 +16,7 @@ func (c myComponent) ID() ComponentID {
 }
 
 func testComponentStore(t *testing.T) {
-	store := newComponentStore[myComponent](10)
+	store := newComponentStore[myComponent]()
 	entity1 := newEntity(1)
 	entity2 := newEntity(2)
 	t.Run("AddRemove", func(t *testing.T) {

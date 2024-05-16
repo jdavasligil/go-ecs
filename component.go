@@ -10,20 +10,12 @@ type Component interface {
 // Initialize initializes a component which ensures that a store is created.
 //
 // Initialize must be called before entities are added.
-//
-// Parameters:
-//
-//	pow2 - Page size for the underlying paginated array is 2^(pow2).
-//
-//	       Note: Powers of 2 between 7 and 11 are recommended. This
-//	       corresponds to sizes between 128 and 2048. Smaller pages
-//	       have more cache misses but use less memory and sweep faster.
-func Initialize[T Component](w *World, pow2 uint32) bool {
+func Initialize[T Component](w *World) bool {
 	var noop T
 	if w.components[noop.ID()] != nil || w.ComponentCount == cap(w.components) {
 		return false
 	}
-	w.components[noop.ID()] = newComponentStore[T](pow2)
+	w.components[noop.ID()] = newComponentStore[T]()
 	w.ComponentCount++
 	return true
 }
@@ -56,11 +48,12 @@ func Remove[T Component](w *World, e Entity) bool {
 
 // RemoveAndClean removes a component from an entity and sweeps the page.
 //
-// Sweeped pages are only cleaned up if completely empty. Hence, the majority
-// of the time it does nothing. For small page sizes the performance hit is
-// probably negligible. For performance critical tasks use Remove.
+// Additionally, it performs a reallocation of dense arrays which may cause
+// GC pauses if overused.
 //
-// As a compromise Sweep can be called periodically to prevent memory leaks.
+// Sweeped pages are only cleaned up if completely empty. Hence, the majority
+// of the time it does nothing. Sweeping is ~32x slower. For performance
+// critical tasks use Remove.
 //
 // Time Complexity: O(N) where N is the page size.
 func RemoveAndClean[T Component](w *World, e Entity) bool {
@@ -73,6 +66,9 @@ func RemoveAndClean[T Component](w *World, e Entity) bool {
 }
 
 // Sweep iterates through the component store freeing memory of empty pages.
+//
+// It is not a bad idea to call this periodically if removals are frequent
+// and space is a premium.
 //
 // Time Complexity: O(MN) where M is the page count and N is the page size.
 func Sweep[T Component](w *World) {

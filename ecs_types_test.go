@@ -2,20 +2,13 @@ package ecs_test
 
 import "github.com/jdavasligil/go-ecs"
 
+// IDs
 const (
 	VelocityID ecs.ComponentID = iota
 	PositionID
 	HealthID
 	CombatTagID
 	DeadTagID
-)
-
-const (
-	VelocityPageSize = 7 + iota
-	PositionPageSize
-	HealthPageSize
-	CombatTagPageSize
-	DeadTagPageSize
 )
 
 // Components
@@ -38,18 +31,8 @@ type CombatTag struct{}
 type DeadTag struct{}
 
 // ID Methods
-func (c DeadTag) ID() ecs.ComponentID {
-	return DeadTagID
-}
-func (c Velocity) ID() ecs.ComponentID {
-	return VelocityID
-}
-func (c Position) ID() ecs.ComponentID {
-	return PositionID
-}
-func (c Health) ID() ecs.ComponentID {
-	return HealthID
-}
-func (c CombatTag) ID() ecs.ComponentID {
-	return CombatTagID
-}
+func (c DeadTag) ID() ecs.ComponentID   { return DeadTagID }
+func (c Velocity) ID() ecs.ComponentID  { return VelocityID }
+func (c Position) ID() ecs.ComponentID  { return PositionID }
+func (c Health) ID() ecs.ComponentID    { return HealthID }
+func (c CombatTag) ID() ecs.ComponentID { return CombatTagID }

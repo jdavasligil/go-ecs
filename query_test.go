@@ -13,11 +13,11 @@ func TestQuery(t *testing.T) {
 		RecycleLimit:   1024,
 		ComponentLimit: 255,
 	})
-	ecs.Initialize[Position](&world, PositionPageSize)
-	ecs.Initialize[Velocity](&world, VelocityPageSize)
-	ecs.Initialize[Health](&world, HealthPageSize)
-	ecs.Initialize[CombatTag](&world, CombatTagPageSize)
-	ecs.Initialize[DeadTag](&world, DeadTagPageSize)
+	ecs.Initialize[Position](&world)
+	ecs.Initialize[Velocity](&world)
+	ecs.Initialize[Health](&world)
+	ecs.Initialize[CombatTag](&world)
+	ecs.Initialize[DeadTag](&world)
 
 	player := world.NewEntity()
 	npc1 := world.NewEntity()
@@ -159,12 +159,11 @@ func BenchmarkQuery(b *testing.B) {
 		RecycleLimit:   1024,
 		ComponentLimit: 255,
 	})
-	pSize := 8
-	ecs.Initialize[Position](&world, uint32(pSize))
-	ecs.Initialize[Velocity](&world, uint32(pSize))
-	ecs.Initialize[Health](&world, uint32(pSize))
-	ecs.Initialize[CombatTag](&world, uint32(pSize))
-	ecs.Initialize[DeadTag](&world, uint32(pSize))
+	ecs.Initialize[Position](&world)
+	ecs.Initialize[Velocity](&world)
+	ecs.Initialize[Health](&world)
+	ecs.Initialize[CombatTag](&world)
+	ecs.Initialize[DeadTag](&world)
 
 	entities := make([]ecs.Entity, world.EntityLimit())
 

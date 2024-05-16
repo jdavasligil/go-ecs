@@ -8,7 +8,7 @@ import (
 )
 
 func TestPageArraySet(t *testing.T) {
-	arr := pagearray.NewPageArray(12) // Page size: 2^12 = 4096 ints
+	arr := pagearray.NewPageArray()
 	//t.Logf("Memory Usage (Empty): %d bytes\n", arr.MemUsage())
 	arr.Set(0, 0)
 	arr.Set(1, 1)
@@ -33,7 +33,7 @@ func TestPageArraySet(t *testing.T) {
 }
 
 func TestPageArrayClear(t *testing.T) {
-	arr := pagearray.NewPageArray(3) // Page size: 2^8 = 8 ints
+	arr := pagearray.NewPageArray()
 	arr.Set(16, 0)
 	testutil.AssertEqual(t, arr.At(16), 0)
 	arr.Clear(16)
@@ -41,7 +41,7 @@ func TestPageArrayClear(t *testing.T) {
 }
 
 func TestPageArraySweepAndClear(t *testing.T) {
-	arr := pagearray.NewPageArray(3) // Page size: 2^8 = 8 ints
+	arr := pagearray.NewPageArray()
 	arr.Set(1, 0)
 	memInitial := arr.MemUsage()
 	arr.SweepAndClear(1)
@@ -51,7 +51,7 @@ func TestPageArraySweepAndClear(t *testing.T) {
 }
 
 func TestPageArraySweep(t *testing.T) {
-	arr := pagearray.NewPageArray(12) // Page size: 2^12 = 4096 ints
+	arr := pagearray.NewPageArray()
 	memInitial := arr.MemUsage()
 	arr.Set(0, 0)
 	arr.Set(4096, 0)
@@ -66,7 +66,7 @@ func TestPageArraySweep(t *testing.T) {
 
 func BenchmarkPageArray(b *testing.B) {
 	b.Run("PageArraySweepAndClear", func(b *testing.B) {
-		pArr := pagearray.NewPageArray(10) // Page size: 2^ = 1024 ints
+		pArr := pagearray.NewPageArray()
 		for i := 0; i < b.N; i++ {
 			pArr.Set(1, 1)
 			pArr.Set(1024, 2)
@@ -79,7 +79,7 @@ func BenchmarkPageArray(b *testing.B) {
 		}
 	})
 	b.Run("PageArrayClear", func(b *testing.B) {
-		pArr := pagearray.NewPageArray(10) // Page size: 2^ = 1024 ints
+		pArr := pagearray.NewPageArray()
 		for i := 0; i < b.N; i++ {
 			pArr.Set(1, 1)
 			pArr.Set(1024, 2)
