@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/jdavasligil/go-ecs"
@@ -153,6 +154,8 @@ func TestQuery(t *testing.T) {
 	})
 }
 
+var loc int
+
 func BenchmarkQuery(b *testing.B) {
 	world := ecs.NewWorld(ecs.WorldOptions{
 		EntityLimit:    ecs.MAX_ENTITIES,
@@ -170,10 +173,10 @@ func BenchmarkQuery(b *testing.B) {
 	for i := range entities {
 		entities[i] = world.NewEntity()
 		ecs.Add(&world, entities[i], Position{float32(i + 1), 0.0, 0.0})
-		if i%2048 == 0 {
+		if i%2 == 0 {
 			ecs.Add(&world, entities[i], Health{i + 1})
 		}
-		if i%4096 == 0 {
+		if i%256 == 0 {
 			ecs.Add(&world, entities[i], Velocity{-float32(i + 1), 0.0, 0.0})
 		}
 		if i%512 == 0 {
@@ -200,26 +203,36 @@ func BenchmarkQuery(b *testing.B) {
 			ecs.MemUsage[CombatTag](&world)+
 			ecs.MemUsage[DeadTag](&world))
 
+	b.ResetTimer()
 	b.Run("Query2", func(b *testing.B) {
+		b.ReportAllocs()
+		b.StartTimer()
 		es := ecs.Query2[Position, Health](&world)
-		var pcount float32 = 0.0
-		hcount := 0
 		for _, e := range es {
-			pos, _ := ecs.Get[Position](&world, e)
 			hp, _ := ecs.Get[Health](&world, e)
-			pcount += pos.x
-			hcount += hp.hp
+			loc += hp.hp
 		}
+		b.StopTimer()
 	})
 	b.Run("Query5", func(b *testing.B) {
-		es := ecs.Query5[Position, Velocity, Health, CombatTag, DeadTag](&world)
-		var pcount float32 = 0.0
-		hcount := 0
+		b.StartTimer()
+		es := ecs.Query4Exclude1[Position, Velocity, Health, CombatTag, DeadTag](&world)
 		for _, e := range es {
-			pos, _ := ecs.Get[Position](&world, e)
 			hp, _ := ecs.Get[Health](&world, e)
-			pcount += pos.x
-			hcount += hp.hp
+			loc += hp.hp
+		}
+		b.StopTimer()
+	})
+	b.Run("QueryExclude", func(b *testing.B) {
+		b.StartTimer()
+		es := ecs.QueryExclude[Position, Health](&world)
+		b.StopTimer()
+		for _, e := range es {
+			hp, ok := ecs.Get[Health](&world, e)
+			if ok {
+				loc += hp.hp
+			}
 		}
 	})
+	runtime.KeepAlive(loc)
 }

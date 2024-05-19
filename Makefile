@@ -19,4 +19,4 @@ bench:
 
 .PHONY: clean
 clean:
-	@go clean && rm -rf ./bin/*
+	@go clean && rm -rf ./bin/* && rm -r ./*.out && rm -r ./*.asm

@@ -4,8 +4,8 @@ import (
 	"unsafe"
 )
 
-const PAGE_SIZE = 32
-const POW2 = 5
+const PAGE_SIZE = 64
+const POW2 = 6
 
 // PageArray is a space saving data structure which splits an array into pages.
 // Pages initialize to nil allowing for minimally sized gaps between pages.
@@ -114,7 +114,6 @@ func (p *PageArray) At(idx int) int {
 	pageIdx := idx >> POW2
 	offset := idx & (PAGE_SIZE - 1)
 	if len(p.pages) <= pageIdx || p.pages[pageIdx] == nil {
-		//log.Printf("LEN: %d <= IDX: %d\n", len(p.pages), pageIdx)
 		return -1
 	}
 	return p.pages[pageIdx][offset]
